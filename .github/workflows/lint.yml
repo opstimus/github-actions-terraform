@@ -17,7 +17,7 @@ jobs:
       run: terraform --version
 
     - name: Terraform fmt
-      run: terraform fmt -check -recursive
+      run: terraform fmt -check -diff -recursive
 
     - uses: terraform-linters/setup-tflint@v3
       name: Setup TFLint
@@ -31,4 +31,4 @@ jobs:
       run: tflint --init
 
     - name: TFLint check
-      run: tflint -f compact
+      run: tflint
