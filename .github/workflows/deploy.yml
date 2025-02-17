@@ -1,0 +1,43 @@
+name: Terraform deploy
+
+on:
+  push:
+    branches:
+      - demo
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency: build-deploy
+  
+jobs:  
+  terraform-deploy:
+    name: Deploy prod
+    if: github.event_name != 'pull_request'
+    needs: build-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-southeast-1
+          role-to-assume: arn:aws:iam::067802362252:role/projectx-prod-iac-deploy
+          role-session-name: deploy
+          role-skip-session-tagging: true
+
+      - name: Terraform init
+        run: terraform init -backend-config="environments/prod/config.s3.tfbackend"
+        working-directory: ./services/api/iac
+
+      - name: Terraform Apply
+        run: terraform apply -var-file="environments/prod/terraform.tfvars" -auto-approve
+        working-directory: ./services/api/iac
+        env:
+          TF_VAR_image_tag: ${{ needs.build-image.outputs.image_tag }}
