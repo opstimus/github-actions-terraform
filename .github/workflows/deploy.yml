@@ -27,11 +27,9 @@ permissions:
   id-token: write
   contents: read
 
-concurrency: build-deploy
-
 jobs:
   terraform-plan:
-    name: terraform deploy
+    name: Terraform plan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -50,15 +48,15 @@ jobs:
 
       - name: Terraform init
         run: terraform init -backend-config="${{ inputs.backend-config }}"
-        working-directory: ./services/api/iac
+        working-directory: ${{ inputs.working-directory }}
 
       - name: Terraform Plan
         run: terraform plan ${{ inputs.args }}
-        working-directory: ./services/api/iac
+        working-directory: ${{ inputs.working-directory }}
 
   terraform-deploy:
     if: ${{ inputs.deploy == true }}
-    name: terraform deploy
+    name: Terraform deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -77,10 +75,8 @@ jobs:
 
       - name: Terraform init
         run: terraform init -backend-config="${{ inputs.backend-config }}"
-        working-directory: ./services/api/iac
+        working-directory: ${{ inputs.working-directory }}
 
       - name: Terraform Apply
         run: terraform apply ${{ inputs.args }} -auto-approve
-        working-directory: ./services/api/iac
-        env:
-          TF_VAR_image_tag: ${{ needs.build-image.outputs.image_tag }}
+        working-directory: ${{ inputs.working-directory }}
