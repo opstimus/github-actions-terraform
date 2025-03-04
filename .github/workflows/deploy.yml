@@ -54,10 +54,10 @@ jobs:
         run: terraform plan ${{ inputs.args }}
         working-directory: ${{ inputs.working-directory }}
 
-  terraform-deploy:
+  terraform-apply:
     needs: terraform-plan
     if: ${{ inputs.deploy == true }}
-    name: Terraform deploy
+    name: Terraform apply
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
