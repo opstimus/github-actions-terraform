@@ -51,7 +51,9 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
 
       - name: Terraform Plan
-        run: terraform plan ${{ inputs.args }}
+        run: |
+          $(env | grep TF_VAR_ | awk '{print "export " $1}')
+          terraform plan ${{ inputs.args }}
         working-directory: ${{ inputs.working-directory }}
 
   terraform-deploy:
@@ -79,5 +81,8 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
 
       - name: Terraform Apply
-        run: terraform apply ${{ inputs.args }} -auto-approve
+        run: |
+          $(env | grep TF_VAR_ | awk '{print "export " $1}')
+          terraform apply ${{ inputs.args }} -auto-approve
         working-directory: ${{ inputs.working-directory }}
+
