@@ -15,9 +15,6 @@ on:
       args:
         required: true
         type: string
-      deploy:
-        required: true
-        type: boolean
       working-directory:
         default: "."
         required: false
@@ -56,7 +53,6 @@ jobs:
 
   terraform-apply:
     needs: terraform-plan
-    if: ${{ inputs.deploy == true }}
     name: Terraform apply
     runs-on: ubuntu-latest
     steps:
