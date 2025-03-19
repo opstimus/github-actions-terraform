@@ -19,6 +19,9 @@ on:
         default: "."
         required: false
         type: string
+      apply:
+        required: false
+        type: boolean
 
 permissions:
   id-token: write
@@ -27,6 +30,7 @@ permissions:
 jobs:
   terraform-plan:
     name: Terraform plan
+    if: ${{ inputs.apply == false }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -53,6 +57,7 @@ jobs:
 
   terraform-apply:
     needs: terraform-plan
+    if: ${{ inputs.apply == true }}
     name: Terraform apply
     runs-on: ubuntu-latest
     steps:
