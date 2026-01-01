@@ -1,0 +1,57 @@
+name: 'Terraform Deploy'
+description: 'Run terraform init and plan/apply'
+inputs:
+  backend-config:
+    description: 'Terraform backend config file path'
+    required: true
+  var-file:
+    description: 'Terraform variables file path'
+    required: true
+  working-directory:
+    description: 'Working directory for terraform commands'
+    required: false
+    default: '.'
+  action:
+    description: 'Terraform action: plan or apply'
+    required: false
+    default: 'plan'
+  env-vars:
+    description: 'JSON object of environment variables to set (e.g., {"TF_VAR_key":"value"})'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+
+    - name: Terraform init
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: terraform init -backend-config="${{ inputs.backend-config }}"
+
+    - name: Terraform ${{ inputs.action }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        ENV_VARS_JSON: ${{ inputs.env-vars }}
+      run: |
+        # Export environment variables from JSON if provided
+        if [[ -n "$ENV_VARS_JSON" ]]; then
+          # Use jq to parse JSON and export variables (jq is available in ubuntu-latest)
+          while IFS= read -r line; do
+            if [[ -n "$line" ]]; then
+              export "$line"
+            fi
+          done < <(echo "$ENV_VARS_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"')
+        fi
+
+        if [[ "${{ inputs.action }}" == "plan" ]]; then
+          terraform plan -var-file="${{ inputs.var-file }}"
+        elif [[ "${{ inputs.action }}" == "apply" ]]; then
+          terraform apply -var-file="${{ inputs.var-file }}" -auto-approve
+        else
+          echo "Error: action must be 'plan' or 'apply'"
+          exit 1
+        fi
+
