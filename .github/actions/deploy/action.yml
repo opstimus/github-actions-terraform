@@ -39,11 +39,17 @@ runs:
         # Export environment variables from JSON if provided
         if [[ -n "$ENV_VARS_JSON" ]]; then
           # Use jq to parse JSON and export variables (jq is available in ubuntu-latest)
-          while IFS= read -r line; do
-            if [[ -n "$line" ]]; then
-              export "$line"
+          # Use base64 encoding to safely handle all special characters
+          while IFS= read -r key && IFS= read -r value_b64; do
+            if [[ -n "$key" ]]; then
+              # Decode the base64 value and assign it
+              value=$(echo "$value_b64" | base64 -d)
+              # Use printf -v to safely assign the value to the variable name
+              printf -v "$key" %s "$value"
+              # Export the variable
+              export "$key"
             fi
-          done < <(echo "$ENV_VARS_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"')
+          done < <(echo "$ENV_VARS_JSON" | jq -r 'to_entries[] | "\(.key)\n\(.value | @base64)"')
         fi
 
         if [[ "${{ inputs.action }}" == "plan" ]]; then
@@ -54,4 +60,3 @@ runs:
           echo "Error: action must be 'plan' or 'apply'"
           exit 1
         fi
-
