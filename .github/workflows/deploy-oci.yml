@@ -41,6 +41,11 @@ jobs:
   terraform-action:
     name: Terraform ${{ inputs.action }}
     runs-on: ubuntu-latest
+    env:
+      TF_VAR_fingerprint:  ${{ secrets.TF_VAR_FINGERPRINT }}
+      TF_VAR_tenancy_ocid: ${{ secrets.TF_VAR_TENANCY_OCID }}
+      TF_VAR_user_ocid:    ${{ secrets.TF_VAR_USER_OCID }}
+      TF_VAR_private_key:  ${{ secrets.TF_VAR_PRIVATE_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
