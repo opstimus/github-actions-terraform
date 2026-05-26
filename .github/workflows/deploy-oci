@@ -1,0 +1,70 @@
+name: Terraform deploy
+
+on:
+  workflow_call:
+    inputs:
+      aws-region:
+        required: true
+        type: string
+      role-to-assume:
+        required: true
+        type: string
+      backend-config:
+        required: true
+        type: string
+      args:
+        required: true
+        type: string
+      working-directory:
+        default: "."
+        required: false
+        type: string
+      action:
+        default: "plan" # plan or apply
+        required: false
+        type: string
+    secrets:
+      TF_VAR_FINGERPRINT:
+        required: false
+      TF_VAR_TENANCY_OCID:
+        required: false
+      TF_VAR_USER_OCID:
+        required: false
+      TF_VAR_PRIVATE_KEY:
+        required: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform-action:
+    name: Terraform ${{ inputs.action }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ inputs.aws-region }}
+          role-to-assume: ${{ inputs.role-to-assume }}
+          role-session-name: deploy
+          role-skip-session-tagging: true
+
+      - name: Terraform init
+        run: terraform init -backend-config="${{ inputs.backend-config }}"
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: Terraform ${{ inputs.action }}
+        run: |
+          if [[ "${{ inputs.action }}" == "plan" ]]; then
+            terraform plan ${{ inputs.args }}
+          elif [[ "${{ inputs.action }}" == "apply" ]]; then
+            terraform apply ${{ inputs.args }} -auto-approve
+          fi
+        working-directory: ${{ inputs.working-directory }}
