@@ -53,6 +53,14 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
+      - name: Write OCI private key
+        run: |
+          echo "${{ secrets.TF_VAR_PRIVATE_KEY }}" > /tmp/oci_private_key.pem
+          chmod 600 /tmp/oci_private_key.pem
+          echo "TF_VAR_private_key<<EOF" >> $GITHUB_ENV
+          cat /tmp/oci_private_key.pem >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
