@@ -61,6 +61,15 @@ jobs:
           cat /tmp/oci_private_key.pem >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
+      - name: Debug private key
+        run: |
+          echo "Key file exists: $(test -f /tmp/oci_private_key.pem && echo yes || echo no)"
+          echo "Key file size: $(wc -c < /tmp/oci_private_key.pem)"
+          echo "First line: $(head -1 /tmp/oci_private_key.pem)"
+          echo "Last line: $(tail -1 /tmp/oci_private_key.pem)"
+          echo "TF_VAR_private_key is set: $(test -n "$TF_VAR_private_key" && echo yes || echo no)"
+          echo "TF_VAR_private_key length: ${#TF_VAR_private_key}"
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
