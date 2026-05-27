@@ -53,11 +53,6 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-      - name: Debug secret
-        run: |
-          echo "Secret is set: $(test -n '${{ secrets.TF_VAR_PRIVATE_KEY }}' && echo yes || echo no)"
-          echo "Secret length: ${{ secrets.TF_VAR_PRIVATE_KEY != '' && 'not empty' || 'EMPTY' }}"
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
