@@ -23,6 +23,9 @@ on:
         default: "plan" # plan or apply
         required: false
         type: string
+      oci-region:
+        required: true
+        type: string
     secrets:
       TF_VAR_FINGERPRINT:
         required: false
@@ -60,6 +63,24 @@ jobs:
           role-to-assume: ${{ inputs.role-to-assume }}
           role-session-name: deploy
           role-skip-session-tagging: true
+
+      - name: Install OCI CLI
+        run: pip install oci-cli --quiet
+
+      - name: Setup OCI config
+        run: |
+          mkdir -p ~/.oci
+          cat <<EOF > ~/.oci/config
+          [DEFAULT]
+          user=${{ secrets.TF_VAR_USER_OCID }}
+          fingerprint=${{ secrets.TF_VAR_FINGERPRINT }}
+          tenancy=${{ secrets.TF_VAR_TENANCY_OCID }}
+          region=${{ inputs.oci-region }}
+          key_file=~/.oci/oci_api_key.pem
+          EOF
+
+          echo "${{ secrets.TF_VAR_PRIVATE_KEY }}" > ~/.oci/oci_api_key.pem
+          chmod 600 ~/.oci/oci_api_key.pem
 
       - name: Terraform init
         run: terraform init -backend-config="${{ inputs.backend-config }}"
